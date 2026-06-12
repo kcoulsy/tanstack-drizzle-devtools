@@ -76,6 +76,10 @@ export function getQueryLog(): QueryLogEntry[] {
   return storage.getStore()?.entries ?? []
 }
 
+export function hasQueryLogStore(): boolean {
+  return storage.getStore() !== undefined
+}
+
 function findIncompleteEntry(
   entries: QueryLogEntry[] | undefined,
   sql: string,

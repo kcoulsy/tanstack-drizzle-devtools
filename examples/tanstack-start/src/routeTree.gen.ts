@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ServerFnRouteImport } from './routes/server-fn'
 import { Route as NPlusOneRouteImport } from './routes/n-plus-one'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ServerFnRoute = ServerFnRouteImport.update({
+  id: '/server-fn',
+  path: '/server-fn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NPlusOneRoute = NPlusOneRouteImport.update({
   id: '/n-plus-one',
   path: '/n-plus-one',
@@ -33,34 +39,45 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/n-plus-one': typeof NPlusOneRoute
+  '/server-fn': typeof ServerFnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/n-plus-one': typeof NPlusOneRoute
+  '/server-fn': typeof ServerFnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/n-plus-one': typeof NPlusOneRoute
+  '/server-fn': typeof ServerFnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/blog' | '/n-plus-one'
+  fullPaths: '/' | '/blog' | '/n-plus-one' | '/server-fn'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog' | '/n-plus-one'
-  id: '__root__' | '/' | '/blog' | '/n-plus-one'
+  to: '/' | '/blog' | '/n-plus-one' | '/server-fn'
+  id: '__root__' | '/' | '/blog' | '/n-plus-one' | '/server-fn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogRoute: typeof BlogRoute
   NPlusOneRoute: typeof NPlusOneRoute
+  ServerFnRoute: typeof ServerFnRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/server-fn': {
+      id: '/server-fn'
+      path: '/server-fn'
+      fullPath: '/server-fn'
+      preLoaderRoute: typeof ServerFnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/n-plus-one': {
       id: '/n-plus-one'
       path: '/n-plus-one'
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogRoute: BlogRoute,
   NPlusOneRoute: NPlusOneRoute,
+  ServerFnRoute: ServerFnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

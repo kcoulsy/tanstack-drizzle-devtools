@@ -16,24 +16,36 @@ export function createQueryLogFunctionMiddleware(
   return createMiddleware({ type: 'function' })
     .client(createFunctionClientMiddleware(options))
     .server(async ({ next }) => {
-      const result = await next()
+      const run = async () => {
+        const result = await next()
 
-      if (!enabled) {
-        return result
+        if (!enabled) {
+          return result
+        }
+
+        const { getQueryLog } = await import('../logging/query-log.ts')
+        const queries = getQueryLog()
+        if (queries.length === 0) {
+          return result
+        }
+
+        return {
+          ...result,
+          sendContext: {
+            ...result.sendContext,
+            [QUERY_LOG_SEND_CONTEXT_KEY]: queries,
+          },
+        }
       }
 
-      const { getQueryLog } = await import('../logging/query-log.ts')
-      const queries = getQueryLog()
-      if (queries.length === 0) {
-        return result
+      const { hasQueryLogStore, runWithQueryLog } = await import(
+        '../logging/query-log.ts'
+      )
+
+      if (hasQueryLogStore()) {
+        return run()
       }
 
-      return {
-        ...result,
-        sendContext: {
-          ...result.sendContext,
-          [QUERY_LOG_SEND_CONTEXT_KEY]: queries,
-        },
-      }
+      return runWithQueryLog(run)
     })
 }

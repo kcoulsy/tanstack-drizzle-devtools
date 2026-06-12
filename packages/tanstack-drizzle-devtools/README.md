@@ -31,7 +31,7 @@ npm i -D @tanstack/react-devtools @tanstack/devtools-vite @tanstack/devtools-eve
 
 ### 1. Register middleware in `src/start.ts`
 
-Request middleware captures queries during SSR and injects them into the initial HTML. Function middleware sends queries to the client after each server-function call (client-side navigations).
+Request middleware captures queries during SSR and injects them into the initial HTML. Function middleware sends queries to the client after every server-function RPC — route loaders, button clicks, and mutations alike.
 
 ```ts
 import { createStart } from '@tanstack/react-start'
@@ -158,6 +158,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   DrizzleDevtoolsPanel,
   DrizzleQueryBootstrap,
+  DrizzleQueryRouterSync,
 } from 'tanstack-drizzle-devtools/client'
 
 const isDev = import.meta.env.DEV
@@ -178,6 +179,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         {children}
         {isDev && <DrizzleQueryBootstrap />}
+        {isDev && <DrizzleQueryRouterSync />}
         <TanStackDevtools
           config={{ position: 'bottom-right' }}
           plugins={devtoolsPlugins}
@@ -221,9 +223,10 @@ export default defineConfig({
 The panel shows queries for the **current page view**:
 
 - **Full page load** — queries are injected into the HTML and picked up on hydration.
-- **Client-side navigation** — queries from the route loader’s server function are pushed automatically.
+- **Client-side navigation** — queries from the route loader’s server function are pushed automatically; the log resets when the route changes.
+- **Direct server-function calls** — mutations, refetches, or any `createServerFn` invoked from a button or event handler append to the log on the same route without navigating.
 
-Navigate between routes and the log updates to reflect only what ran for that navigation.
+Navigate between routes and the log resets to reflect only what ran for the new page. Server-function calls on the same route keep appending.
 
 ### Panel features
 
@@ -241,9 +244,10 @@ Queries are collected in an `AsyncLocalStorage` store for the lifetime of each s
 | Path | Mechanism |
 | --- | --- |
 | SSR / document request | `createQueryLogMiddleware` injects `window.__DB_QUERIES__` into the HTML; `DrizzleQueryBootstrap` reads it on the client |
-| Client navigation | `createQueryLogFunctionMiddleware` returns the query log via `sendContext`; the client publishes it to the devtools event bus |
+| Client navigation | `createQueryLogFunctionMiddleware` returns the query log via `sendContext`; `DrizzleQueryRouterSync` clears the log on route change; loader queries append |
+| Same-route server fn | Same function middleware path; queries append to the current page log (no route change) |
 
-The panel subscribes to `queries-update` events and replaces the list on each page transition — there is no global query history across navigations.
+The panel subscribes to `queries-update` events. `DrizzleQueryRouterSync` resets the log on navigation; server-function RPC batches append on the same route. Use the **Preserve** checkbox to accumulate queries across navigations while debugging.
 
 ## API
 
@@ -252,7 +256,7 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 | Export | Description |
 | --- | --- |
 | `createQueryLogMiddleware()` | Request middleware — ALS scope + HTML injection |
-| `createQueryLogFunctionMiddleware()` | Server-function middleware — pushes queries on client navigations |
+| `createQueryLogFunctionMiddleware()` | Server-function middleware — pushes queries after every server-fn RPC |
 | `createDrizzleQueryLogger()` | Drizzle `Logger` implementation |
 | `instrumentDrizzleDb(db)` | Wraps Drizzle instance for accurate source links |
 | `instrumentDatabase(db)` | Wraps `better-sqlite3` `Database` for timing / row count / size |
@@ -267,7 +271,7 @@ Both middleware factories accept `QueryLogMiddlewareOptions`:
 | `enabled` | `NODE_ENV === 'development'` | Turn query logging on or off |
 | `alertOnNPlusOne` | `false` | When enabled, shows a blocking browser `alert()` whenever a published query batch contains detected N+1 patterns |
 
-Pass the same options object to both middleware factories. Alerts fire once per query batch (typically each page load or client navigation).
+Pass the same options object to both middleware factories. Alerts fire once per query batch (typically each page load, navigation, or server-function call).
 
 ### Client (`tanstack-drizzle-devtools/client`)
 
@@ -275,11 +279,12 @@ Pass the same options object to both middleware factories. Alerts fire once per 
 | --- | --- |
 | `DrizzleDevtoolsPanel` | TanStack Devtools plugin panel |
 | `DrizzleQueryBootstrap` | Reads initial SSR query payload; mount once in your root shell |
+| `DrizzleQueryRouterSync` | Clears the query log on route navigation; mount in your root shell |
 
 ## Limitations
 
 - **Development only** — disable via `enabled: false` or `NODE_ENV` checks.
-- **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
+- **Per-navigation scope** — the log resets when you navigate (`DrizzleQueryRouterSync`); same-route server-function calls append instead. Uncheck **Preserve** in the panel to replace batches manually.
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
 - **Driver coverage** — instrumentation ships for `better-sqlite3`, `pg`, and `mysql2`; other drivers still work with the logger alone.
 

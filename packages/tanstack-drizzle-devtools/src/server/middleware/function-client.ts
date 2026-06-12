@@ -36,7 +36,7 @@ export function createFunctionClientMiddleware(
       const { publishQueriesToClient } = await import(
         '../../client/lib/publish-queries.ts'
       )
-      publishQueriesToClient(queries)
+      publishQueriesToClient(queries, { replace: false })
     }
 
     return result

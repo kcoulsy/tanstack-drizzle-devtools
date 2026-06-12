@@ -10,6 +10,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   DrizzleDevtoolsPanel,
   DrizzleQueryBootstrap,
+  DrizzleQueryRouterSync,
 } from 'tanstack-drizzle-devtools/client'
 
 import appCss from '../styles.css?url'
@@ -74,6 +75,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Blog
           </Link>
           <Link
+            to="/server-fn"
+            className="font-medium text-gray-700 hover:text-gray-900 [&.active]:text-blue-600"
+          >
+            Server functions
+          </Link>
+          <Link
             to="/n-plus-one"
             className="font-medium text-gray-700 hover:text-gray-900 [&.active]:text-blue-600"
           >
@@ -82,6 +89,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </nav>
         {children}
         {isDev && <DrizzleQueryBootstrap />}
+        {isDev && <DrizzleQueryRouterSync />}
         <TanStackDevtools
           config={{
             position: 'bottom-right',

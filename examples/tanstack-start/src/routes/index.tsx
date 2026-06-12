@@ -109,6 +109,12 @@ function ProjectsPage() {
 
       <p className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
         <Link
+          to="/server-fn"
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          Server function example →
+        </Link>
+        <Link
           to="/blog"
           className="text-blue-600 underline hover:text-blue-800"
         >
