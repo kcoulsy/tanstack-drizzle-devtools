@@ -6,6 +6,8 @@ export {
 export {
   instrumentDatabase,
   instrumentDrizzleDb,
+  instrumentMysql,
+  instrumentPg,
   instrumentSqlite,
 } from './instrument/index.ts'
 export { createQueryLogMiddleware } from './middleware/request.ts'

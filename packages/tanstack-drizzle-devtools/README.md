@@ -10,7 +10,7 @@ Development only. Nothing is logged or shipped in production builds.
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [TanStack Devtools](https://tanstack.com/devtools) (`@tanstack/react-devtools` + `@tanstack/devtools-vite`)
 
-SQLite instrumentation (`instrumentDatabase`) is included for `better-sqlite3`. Other drivers work with the Drizzle logger alone — you get SQL and params, but row counts and byte sizes may be missing unless you add your own instrumentation.
+Driver instrumentation is included for `better-sqlite3`, `pg` (`node-postgres`), and `mysql2`. Without it, the Drizzle logger still records SQL and params, but duration, row counts, and payload sizes stay empty.
 
 ## Install
 
@@ -46,9 +46,11 @@ export const startInstance = createStart(() => ({
 }))
 ```
 
-### 2. Attach the Drizzle logger (and optional SQLite instrumentation)
+### 2. Attach the Drizzle logger and driver instrumentation
 
-In your database client, enable the logger in development. For `better-sqlite3`, also wrap the native database so queries get accurate duration, row count, and payload size.
+Enable the logger in development, wrap the native driver for timing/row metadata, and wrap the Drizzle instance so source links point at your app code instead of Drizzle internals.
+
+**SQLite (`better-sqlite3`)**
 
 ```ts
 import Database from 'better-sqlite3'
@@ -56,6 +58,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import {
   createDrizzleQueryLogger,
   instrumentDatabase,
+  instrumentDrizzleDb,
 } from 'tanstack-drizzle-devtools/server'
 
 const sqlite = new Database(process.env.DATABASE_URL!)
@@ -64,13 +67,81 @@ if (process.env.NODE_ENV === 'development') {
   instrumentDatabase(sqlite)
 }
 
-export const db = drizzle(sqlite, {
+const drizzleDb = drizzle(sqlite, {
   schema,
   logger:
     process.env.NODE_ENV === 'development'
       ? createDrizzleQueryLogger()
       : false,
 })
+
+export const db =
+  process.env.NODE_ENV === 'development'
+    ? instrumentDrizzleDb(drizzleDb)
+    : drizzleDb
+```
+
+**PostgreSQL (`pg`)**
+
+```ts
+import { Pool } from 'pg'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import {
+  createDrizzleQueryLogger,
+  instrumentDrizzleDb,
+  instrumentPg,
+} from 'tanstack-drizzle-devtools/server'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+
+if (process.env.NODE_ENV === 'development') {
+  instrumentPg(pool)
+}
+
+const drizzleDb = drizzle(pool, {
+  schema,
+  logger:
+    process.env.NODE_ENV === 'development'
+      ? createDrizzleQueryLogger()
+      : false,
+})
+
+export const db =
+  process.env.NODE_ENV === 'development'
+    ? instrumentDrizzleDb(drizzleDb)
+    : drizzleDb
+```
+
+**MySQL (`mysql2`)**
+
+```ts
+import mysql from 'mysql2/promise'
+import { drizzle } from 'drizzle-orm/mysql2'
+import {
+  createDrizzleQueryLogger,
+  instrumentDrizzleDb,
+  instrumentMysql,
+} from 'tanstack-drizzle-devtools/server'
+
+const pool = mysql.createPool(process.env.DATABASE_URL!)
+
+if (process.env.NODE_ENV === 'development') {
+  instrumentMysql(pool)
+}
+
+const drizzleDb = drizzle(pool, {
+  schema,
+  mode: 'default',
+  logger:
+    process.env.NODE_ENV === 'development'
+      ? createDrizzleQueryLogger()
+      : false,
+})
+
+export const db =
+  process.env.NODE_ENV === 'development'
+    ? instrumentDrizzleDb(drizzleDb)
+    : drizzleDb
 ```
 
 ### 3. Add the TanStack Devtools plugin
@@ -178,7 +249,11 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 | `createQueryLogMiddleware()` | Request middleware — ALS scope + HTML injection |
 | `createQueryLogFunctionMiddleware()` | Server-function middleware — pushes queries on client navigations |
 | `createDrizzleQueryLogger()` | Drizzle `Logger` implementation |
+| `instrumentDrizzleDb(db)` | Wraps Drizzle instance for accurate source links |
 | `instrumentDatabase(db)` | Wraps `better-sqlite3` `Database` for timing / row count / size |
+| `instrumentSqlite(db)` | Alias for `instrumentDatabase` |
+| `instrumentPg(client)` | Wraps `pg` `Pool` / `Client` for timing / row count / size |
+| `instrumentMysql(client)` | Wraps `mysql2` `Pool` / `Connection` for timing / row count / size |
 
 Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV === 'development'`).
 
@@ -194,4 +269,4 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 - **Development only** — disable via `enabled: false` or `NODE_ENV` checks.
 - **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
-- **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.
+- **Driver coverage** — instrumentation ships for `better-sqlite3`, `pg`, and `mysql2`; other drivers still work with the logger alone.

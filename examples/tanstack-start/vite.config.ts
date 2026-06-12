@@ -8,9 +8,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
-  ssr: {
-    noExternal: ['tanstack-drizzle-devtools'],
-  },
   plugins: [
     devtools({
       // Avoid server↔client console piping feedback loops (nested [Server] warn spam).

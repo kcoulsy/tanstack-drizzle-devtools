@@ -1,34 +1,17 @@
 import { createMiddleware } from '@tanstack/react-start'
 
-import { getQueryLog } from '../logging/query-log.ts'
-import type { QueryLogEntry } from '../../types.ts'
+import {
+  createFunctionClientMiddleware,
+  QUERY_LOG_SEND_CONTEXT_KEY,
+} from './function-client.ts'
 
-export const QUERY_LOG_SEND_CONTEXT_KEY = 'drizzleDevtoolsQueries'
+export { QUERY_LOG_SEND_CONTEXT_KEY }
 
 export function createQueryLogFunctionMiddleware(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? process.env.NODE_ENV === 'development'
 
   return createMiddleware({ type: 'function' })
-    .client(async ({ next }) => {
-      const result = await next()
-
-      if (!enabled) {
-        return result
-      }
-
-      const queries = result.context?.[QUERY_LOG_SEND_CONTEXT_KEY] as
-        | QueryLogEntry[]
-        | undefined
-
-      if (queries) {
-        const { publishQueriesToClient } = await import(
-          '../../client/lib/publish-queries.ts'
-        )
-        publishQueriesToClient(queries)
-      }
-
-      return result
-    })
+    .client(createFunctionClientMiddleware(options))
     .server(async ({ next }) => {
       const result = await next()
 
@@ -36,6 +19,7 @@ export function createQueryLogFunctionMiddleware(options?: { enabled?: boolean }
         return result
       }
 
+      const { getQueryLog } = await import('../logging/query-log.ts')
       const queries = getQueryLog()
       if (queries.length === 0) {
         return result

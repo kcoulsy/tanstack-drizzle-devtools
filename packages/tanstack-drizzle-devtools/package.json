@@ -5,7 +5,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/server/index.ts",
+    "./server": {
+      "browser": "./src/server/browser.ts",
+      "default": "./src/server/index.ts"
+    },
     "./client": "./src/client/index.ts"
   },
   "scripts": {
@@ -20,6 +23,12 @@
   "peerDependenciesMeta": {
     "better-sqlite3": {
       "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -29,8 +38,11 @@
     "@tanstack/devtools-event-client": "latest",
     "@tanstack/react-start": "latest",
     "@types/better-sqlite3": "^7.6.0",
+    "@types/pg": "^8.15.5",
     "@types/react": "^19.2.0",
     "better-sqlite3": "^12.6.2",
+    "mysql2": "^3.15.3",
+    "pg": "^8.16.3",
     "drizzle-orm": "^0.45.1",
     "react": "^19.2.0",
     "typescript": "^6.0.2",

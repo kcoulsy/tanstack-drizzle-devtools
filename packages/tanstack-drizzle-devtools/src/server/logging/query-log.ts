@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 
+import { getQueryFingerprint } from '../../query-fingerprint.ts'
 import {
   captureSource,
   estimateQuerySize,
@@ -44,12 +45,17 @@ export function logQuery(sql: string, params: unknown[]) {
 }
 
 export function completeQuery(meta: {
+  sql?: string
+  params?: unknown[]
   durationMs: number
   rowCount?: number
   sizeBytes?: number
 }) {
   const store = storage.getStore()
-  const entry = store?.entries.at(-1)
+  const entry =
+    meta.sql !== undefined
+      ? findIncompleteEntry(store?.entries, meta.sql, meta.params ?? [])
+      : store?.entries.at(-1)
 
   if (!entry) {
     return
@@ -68,4 +74,29 @@ export function completeQuery(meta: {
 
 export function getQueryLog(): QueryLogEntry[] {
   return storage.getStore()?.entries ?? []
+}
+
+function findIncompleteEntry(
+  entries: QueryLogEntry[] | undefined,
+  sql: string,
+  params: unknown[],
+) {
+  if (!entries) {
+    return undefined
+  }
+
+  const fingerprint = getQueryFingerprint(sql, params)
+
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index]
+
+    if (
+      entry.durationMs === 0 &&
+      getQueryFingerprint(entry.sql, entry.params) === fingerprint
+    ) {
+      return entry
+    }
+  }
+
+  return undefined
 }
