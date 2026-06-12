@@ -202,3 +202,7 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
 - **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.
 
+## Acknowledgments
+
+Inspired by [PHP Debug Bar](https://php-debugbar.com/), the in-browser debug bar for PHP applications.
+

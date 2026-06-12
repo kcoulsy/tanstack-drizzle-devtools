@@ -270,3 +270,7 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 - **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
 - **Driver coverage** — instrumentation ships for `better-sqlite3`, `pg`, and `mysql2`; other drivers still work with the logger alone.
+
+## Acknowledgments
+
+Inspired by [PHP Debug Bar](https://php-debugbar.com/), the in-browser debug bar for PHP applications.
