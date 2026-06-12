@@ -4,11 +4,14 @@ const INFRASTRUCTURE_PATTERNS = [
   'drizzle-orm',
   'sqlite-core',
   'query-builders',
+  'query-promise',
   'better-sqlite3',
   'package/server',
   'query-log',
+  'query-meta',
   'drizzle-logger',
   'instrument-sqlite',
+  'instrument-drizzle',
   'node:internal',
   'node:async_hooks',
   '@tanstack/react-start',
@@ -34,11 +37,36 @@ export function estimateQuerySize(sql: string, params: unknown[]) {
 }
 
 export function captureSource(): QuerySource | undefined {
-  const stack = new Error().stack
+  return resolveSourceFromStack(new Error().stack)
+}
+
+export function resolveSourceFromStack(
+  stack: string | undefined,
+): QuerySource | undefined {
   if (!stack) {
     return undefined
   }
 
+  const frames = parseStackFrames(stack)
+  const isInfrastructure = (file: string) =>
+    INFRASTRUCTURE_PATTERNS.some((pattern) => file.includes(pattern))
+
+  return (
+    frames.find(
+      (frame) =>
+        frame.file.startsWith('src/routes/') ||
+        frame.file.startsWith('src/db/'),
+    ) ??
+    frames.find(
+      (frame) =>
+        !isInfrastructure(frame.file) &&
+        /\.(tsx?|jsx?|mjs|cjs)$/.test(frame.file),
+    ) ??
+    frames.find((frame) => !isInfrastructure(frame.file))
+  )
+}
+
+export function parseStackFrames(stack: string): QuerySource[] {
   const frames: QuerySource[] = []
 
   for (const line of stack.split('\n').slice(2)) {
@@ -61,33 +89,69 @@ export function captureSource(): QuerySource | undefined {
     frames.push({ file, line: lineNumber })
   }
 
-  const isInfrastructure = (file: string) =>
-    INFRASTRUCTURE_PATTERNS.some((pattern) => file.includes(pattern))
-
-  return (
-    frames.find(
-      (frame) =>
-        frame.file.startsWith('src/routes/') ||
-        frame.file.startsWith('src/db/'),
-    ) ??
-    frames.find((frame) => !isInfrastructure(frame.file)) ??
-    frames[0]
-  )
+  return frames
 }
 
-function shortenPath(filePath: string) {
+export function shortenPath(filePath: string) {
   const normalized = filePath.replace(/\\/g, '/')
-  const srcIndex = normalized.lastIndexOf('/src/')
+
+  if (normalized.startsWith('src/')) {
+    return normalized
+  }
+
+  const srcIndex = findProjectPathIndex(normalized, '/src/')
 
   if (srcIndex !== -1) {
     return normalized.slice(srcIndex + 1)
   }
 
   const distIndex = normalized.lastIndexOf('/dist/server/')
-  if (distIndex !== -1) {
+  if (distIndex !== -1 && !isDependencyPath(normalized)) {
     return normalized.slice(distIndex + '/dist/'.length)
+  }
+
+  if (isDependencyPath(normalized)) {
+    return shortenDependencyPath(normalized)
   }
 
   const segments = normalized.split('/')
   return segments.slice(-2).join('/')
+}
+
+function shortenDependencyPath(path: string) {
+  const nodeModulesIndex = path.lastIndexOf('/node_modules/')
+  if (nodeModulesIndex === -1) {
+    return path.split('/').slice(-2).join('/')
+  }
+
+  const packagePath = path.slice(nodeModulesIndex + '/node_modules/'.length)
+  const segments = packagePath.split('/')
+  const packageName = segments[0]?.startsWith('@')
+    ? `${segments[0]}/${segments[1]}`
+    : segments[0]
+  const fileName = segments.at(-1)
+
+  if (packageName && fileName) {
+    return `${packageName}/${fileName}`
+  }
+
+  return segments.slice(-2).join('/')
+}
+
+function findProjectPathIndex(path: string, marker: string) {
+  let index = path.indexOf(marker)
+
+  while (index !== -1) {
+    if (!isDependencyPath(path.slice(0, index))) {
+      return index
+    }
+
+    index = path.indexOf(marker, index + 1)
+  }
+
+  return -1
+}
+
+function isDependencyPath(path: string) {
+  return path.includes('/node_modules/')
 }

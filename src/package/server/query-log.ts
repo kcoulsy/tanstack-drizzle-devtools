@@ -5,23 +5,41 @@ import {
   estimateQuerySize,
   getQueryKind,
 } from './query-meta.ts'
-import type { QueryLogEntry } from '../types.ts'
+import type { QueryLogEntry, QuerySource } from '../types.ts'
 
-const storage = new AsyncLocalStorage<QueryLogEntry[]>()
+type QueryLogStore = {
+  entries: QueryLogEntry[]
+  pendingSources: QuerySource[]
+}
+
+const storage = new AsyncLocalStorage<QueryLogStore>()
 
 export function runWithQueryLog<T>(fn: () => T | Promise<T>) {
-  return storage.run([], fn)
+  return storage.run({ entries: [], pendingSources: [] }, fn)
+}
+
+export function pushPendingSource(source: QuerySource | undefined) {
+  if (source) {
+    storage.getStore()?.pendingSources.push(source)
+  }
 }
 
 export function logQuery(sql: string, params: unknown[]) {
-  storage.getStore()?.push({
+  const store = storage.getStore()
+  if (!store) {
+    return
+  }
+
+  const source = store.pendingSources.shift() ?? captureSource()
+
+  store.entries.push({
     sql,
     params,
     timestamp: Date.now(),
     durationMs: 0,
     kind: getQueryKind(sql),
     sizeBytes: estimateQuerySize(sql, params),
-    source: captureSource(),
+    source,
   })
 }
 
@@ -31,7 +49,7 @@ export function completeQuery(meta: {
   sizeBytes?: number
 }) {
   const store = storage.getStore()
-  const entry = store?.at(-1)
+  const entry = store?.entries.at(-1)
 
   if (!entry) {
     return
@@ -49,5 +67,5 @@ export function completeQuery(meta: {
 }
 
 export function getQueryLog(): QueryLogEntry[] {
-  return storage.getStore() ?? []
+  return storage.getStore()?.entries ?? []
 }
