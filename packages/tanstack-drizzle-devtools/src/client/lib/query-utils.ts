@@ -65,6 +65,16 @@ export function buildQueryList(queries: QueryLogEntry[]) {
   })
 }
 
+export function getNPlusOneDetection(queries: QueryLogEntry[]) {
+  const stats = getQueryStats(buildQueryList(queries))
+
+  return {
+    detected: stats.nPlusOneGroups > 0,
+    groupCount: stats.nPlusOneGroups,
+    queryCount: stats.nPlusOne,
+  }
+}
+
 export function getQueryStats(items: QueryListItem[]) {
   const unique = new Set(items.map((item) => item.fingerprint)).size
   const total = items.length

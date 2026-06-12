@@ -1,9 +1,10 @@
 import { createMiddleware } from '@tanstack/react-start'
 
 import { injectQueryScript } from './inject.ts'
+import type { QueryLogMiddlewareOptions } from './options.ts'
 import { getQueryLog, runWithQueryLog } from '../logging/query-log.ts'
 
-export function createQueryLogMiddleware(options?: { enabled?: boolean }) {
+export function createQueryLogMiddleware(options?: QueryLogMiddlewareOptions) {
   const enabled = options?.enabled ?? process.env.NODE_ENV === 'development'
 
   return createMiddleware().server(async ({ next }) => {
@@ -27,7 +28,7 @@ export function createQueryLogMiddleware(options?: { enabled?: boolean }) {
       }
 
       const html = await response.text()
-      const injected = injectQueryScript(html, queries)
+      const injected = injectQueryScript(html, queries, options)
 
       return {
         ...result,

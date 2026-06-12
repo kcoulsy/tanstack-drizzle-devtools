@@ -4,10 +4,13 @@ import {
   createFunctionClientMiddleware,
   QUERY_LOG_SEND_CONTEXT_KEY,
 } from './function-client.ts'
+import type { QueryLogMiddlewareOptions } from './options.ts'
 
 export { QUERY_LOG_SEND_CONTEXT_KEY }
 
-export function createQueryLogFunctionMiddleware(options?: { enabled?: boolean }) {
+export function createQueryLogFunctionMiddleware(
+  options?: QueryLogMiddlewareOptions,
+) {
   const enabled = options?.enabled ?? process.env.NODE_ENV === 'development'
 
   return createMiddleware({ type: 'function' })

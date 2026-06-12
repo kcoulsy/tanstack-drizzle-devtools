@@ -5,17 +5,12 @@ import {
   createQueryLogMiddleware,
 } from 'tanstack-drizzle-devtools/server'
 
-const devtoolsEnabled = process.env.NODE_ENV === 'development'
+const devtoolsOptions = {
+  enabled: process.env.NODE_ENV === 'development',
+  alertOnNPlusOne: true,
+}
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [
-    createQueryLogMiddleware({
-      enabled: devtoolsEnabled,
-    }),
-  ],
-  functionMiddleware: [
-    createQueryLogFunctionMiddleware({
-      enabled: devtoolsEnabled,
-    }),
-  ],
+  requestMiddleware: [createQueryLogMiddleware(devtoolsOptions)],
+  functionMiddleware: [createQueryLogFunctionMiddleware(devtoolsOptions)],
 }))

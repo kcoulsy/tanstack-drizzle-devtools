@@ -11,3 +11,4 @@ export {
   instrumentSqlite,
 } from './instrument/index.ts'
 export { createQueryLogMiddleware } from './middleware/request.ts'
+export type { QueryLogMiddlewareOptions } from './middleware/options.ts'

@@ -40,11 +40,14 @@ import {
   createQueryLogMiddleware,
 } from 'tanstack-drizzle-devtools/server'
 
-const enabled = process.env.NODE_ENV === 'development'
+const devtoolsOptions = {
+  enabled: process.env.NODE_ENV === 'development',
+  alertOnNPlusOne: true, // optional: browser alert when N+1 is detected
+}
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [createQueryLogMiddleware({ enabled })],
-  functionMiddleware: [createQueryLogFunctionMiddleware({ enabled })],
+  requestMiddleware: [createQueryLogMiddleware(devtoolsOptions)],
+  functionMiddleware: [createQueryLogFunctionMiddleware(devtoolsOptions)],
 }))
 ```
 
@@ -186,7 +189,7 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 | `instrumentDatabase(db)`             | Wraps `better-sqlite3` `Database` for timing / row count / size   |
 
 
-Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV === 'development'`).
+Both middleware factories accept `QueryLogMiddlewareOptions`: `enabled` (defaults to `NODE_ENV === 'development'`) and `alertOnNPlusOne` (defaults to `false`).
 
 ### Client (`tanstack-drizzle-devtools/client`)
 
