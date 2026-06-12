@@ -39,6 +39,8 @@ export function getPanelTheme(theme?: PanelTheme) {
     bg: isDark ? '#0b0d10' : '#ffffff',
     bgMuted: isDark ? '#111318' : '#f9fafb',
     bgDuplicate: isDark ? '#3d3520' : '#fef9c3',
+    bgNPlusOne: isDark ? '#3d1f1f' : '#fee4e2',
+    nPlusOne: isDark ? '#fda29b' : '#b42318',
     border: isDark ? '#292e3d' : '#eaecf0',
     text: isDark ? '#f2f4f7' : '#101828',
     textMuted: isDark ? '#98a2b3' : '#667085',

@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   Check,
   Clock,
   Copy,
@@ -56,6 +57,7 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
   const [queries, setQueries] = useState<QueryLogEntry[]>(loadInitialQueries)
   const [sort, setSort] = useState<QuerySortOption>('order')
   const [showOnlyDuplicates, setShowOnlyDuplicates] = useState(false)
+  const [showOnlyNPlusOne, setShowOnlyNPlusOne] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
 
     const cleanup = drizzleDevtoolsClient.on('queries-update', (event) => {
       setQueries(event.payload.queries)
+      setShowOnlyDuplicates(false)
     })
 
     return cleanup
@@ -74,8 +77,12 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
   const items = useMemo(() => buildQueryList(queries), [queries])
   const stats = useMemo(() => getQueryStats(items), [items])
   const visibleItems = useMemo(
-    () => sortQueries(filterQueries(items, showOnlyDuplicates), sort),
-    [items, showOnlyDuplicates, sort],
+    () =>
+      sortQueries(
+        filterQueries(items, { showOnlyDuplicates, showOnlyNPlusOne }),
+        sort,
+      ),
+    [items, showOnlyDuplicates, showOnlyNPlusOne, sort],
   )
 
   const copyQuery = async (query: QueryLogEntry, index: number) => {
@@ -147,26 +154,65 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
               {stats.total} {stats.total === 1 ? 'statement' : 'statements'}{' '}
               were executed
             </span>
-            {stats.duplicates > 0 && (
+            {(stats.duplicates > 0 || stats.nPlusOne > 0) && (
               <span style={{ color: colors.textMuted }}>
-                {', '}
-                {stats.duplicates} of which{' '}
-                {stats.duplicates === 1 ? 'was' : 'were'} duplicates,{' '}
-                {stats.unique} unique.{' '}
-                <button
-                  type="button"
-                  onClick={() => setShowOnlyDuplicates((value) => !value)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: colors.link,
-                    cursor: 'pointer',
-                    padding: 0,
-                    textDecoration: showOnlyDuplicates ? 'underline' : 'none',
-                  }}
-                >
-                  {showOnlyDuplicates ? 'Show all' : 'Show only duplicated'}
-                </button>
+                {stats.duplicates > 0 && (
+                  <>
+                    {', '}
+                    {stats.duplicates} of which{' '}
+                    {stats.duplicates === 1 ? 'was' : 'were'} duplicates,{' '}
+                    {stats.unique} unique.{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowOnlyDuplicates((value) => !value)
+                        setShowOnlyNPlusOne(false)
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: colors.link,
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: showOnlyDuplicates
+                          ? 'underline'
+                          : 'none',
+                      }}
+                    >
+                      {showOnlyDuplicates ? 'Show all' : 'Show only duplicated'}
+                    </button>
+                  </>
+                )}
+                {stats.nPlusOne > 0 && (
+                  <>
+                    {stats.duplicates > 0 ? ' ' : ', '}
+                    <span style={{ color: colors.nPlusOne }}>
+                      {stats.nPlusOne}{' '}
+                      {stats.nPlusOne === 1 ? 'looks' : 'look'} like N+1
+                      {stats.nPlusOneGroups > 1
+                        ? ` (${stats.nPlusOneGroups} patterns)`
+                        : ''}
+                      .
+                    </span>{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowOnlyNPlusOne((value) => !value)
+                        setShowOnlyDuplicates(false)
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: colors.link,
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: showOnlyNPlusOne ? 'underline' : 'none',
+                      }}
+                    >
+                      {showOnlyNPlusOne ? 'Show all' : 'Show only N+1'}
+                    </button>
+                  </>
+                )}
               </span>
             )}
           </div>
@@ -234,7 +280,7 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
               color: colors.textMuted,
             }}
           >
-            No duplicate queries on this page load
+            No matching queries on this page load
           </div>
         ) : (
           visibleItems.map((query) => (
@@ -246,7 +292,11 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
                 gap: 12,
                 padding: '10px 12px',
                 borderBottom: `1px solid ${colors.border}`,
-                background: query.isDuplicate ? colors.bgDuplicate : colors.bg,
+                background: query.isNPlusOne
+                  ? colors.bgNPlusOne
+                  : query.isDuplicate
+                    ? colors.bgDuplicate
+                    : colors.bg,
               }}
             >
               <div style={{ minWidth: 0 }}>
@@ -299,6 +349,14 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
                   )}
                 </button>
 
+                {query.isNPlusOne && (
+                  <MetaItem
+                    icon={<AlertTriangle size={12} />}
+                    label={`N+1 ×${query.nPlusOneGroupSize}`}
+                    color={colors.nPlusOne}
+                    title="Same SQL repeated with different params — likely an N+1 query"
+                  />
+                )}
                 <MetaItem
                   icon={
                     query.kind === 'read' ? (

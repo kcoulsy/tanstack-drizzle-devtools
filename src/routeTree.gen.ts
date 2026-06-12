@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NPlusOneRouteImport } from './routes/n-plus-one'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
 
+const NPlusOneRoute = NPlusOneRouteImport.update({
+  id: '/n-plus-one',
+  path: '/n-plus-one',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/n-plus-one': typeof NPlusOneRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/n-plus-one': typeof NPlusOneRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/n-plus-one': typeof NPlusOneRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/blog'
+  fullPaths: '/' | '/blog' | '/n-plus-one'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog'
-  id: '__root__' | '/' | '/blog'
+  to: '/' | '/blog' | '/n-plus-one'
+  id: '__root__' | '/' | '/blog' | '/n-plus-one'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogRoute: typeof BlogRoute
+  NPlusOneRoute: typeof NPlusOneRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/n-plus-one': {
+      id: '/n-plus-one'
+      path: '/n-plus-one'
+      fullPath: '/n-plus-one'
+      preLoaderRoute: typeof NPlusOneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog': {
       id: '/blog'
       path: '/blog'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogRoute: BlogRoute,
+  NPlusOneRoute: NPlusOneRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

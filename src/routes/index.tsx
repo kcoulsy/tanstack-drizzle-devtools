@@ -107,12 +107,18 @@ function ProjectsPage() {
         </ul>
       </section>
 
-      <p className="mt-8">
+      <p className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
         <Link
           to="/blog"
           className="text-blue-600 underline hover:text-blue-800"
         >
           View blog →
+        </Link>
+        <Link
+          to="/n-plus-one"
+          className="text-red-600 underline hover:text-red-800"
+        >
+          N+1 example →
         </Link>
       </p>
     </div>

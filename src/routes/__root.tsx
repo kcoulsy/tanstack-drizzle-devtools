@@ -71,6 +71,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           >
             Blog
           </Link>
+          <Link
+            to="/n-plus-one"
+            className="font-medium text-gray-700 hover:text-gray-900 [&.active]:text-blue-600"
+          >
+            N+1 example
+          </Link>
         </nav>
         {children}
         {isDev && <DrizzleQueryBootstrap />}
