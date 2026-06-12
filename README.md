@@ -193,5 +193,5 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 
 - **Development only** — disable via `enabled: false` or `NODE_ENV` checks.
 - **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
-- **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
+- **Source locations** — links point at the `db.select()` call site. Queries in a separate module (e.g. `src/data/blog.ts`) link there, not the route file that imports the server function.
 - **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.

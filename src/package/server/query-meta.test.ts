@@ -45,4 +45,18 @@ describe('resolveSourceFromStack', () => {
 
     expect(resolveSourceFromStack(stack)).toBeUndefined()
   })
+
+  it('prefers the query file over the route loader', () => {
+    const stack = `Error
+    at pushPendingSource (src/package/server/query-log.ts:23:5)
+    at Proxy.select (src/package/server/instrument-drizzle.ts:29:11)
+    at getBlogPageData (src/data/blog.ts:14:33)
+    at handler (node_modules/@tanstack/react-start/dist/server-fn.js:10:5)
+    at loader (src/routes/blog.tsx:6:16)`
+
+    expect(resolveSourceFromStack(stack)).toEqual({
+      file: 'src/data/blog.ts',
+      line: 14,
+    })
+  })
 })

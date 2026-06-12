@@ -51,18 +51,13 @@ export function resolveSourceFromStack(
   const isInfrastructure = (file: string) =>
     INFRASTRUCTURE_PATTERNS.some((pattern) => file.includes(pattern))
 
+  // Prefer the innermost application frame (closest to db.select()).
   return (
-    frames.find(
-      (frame) =>
-        frame.file.startsWith('src/routes/') ||
-        frame.file.startsWith('src/db/'),
-    ) ??
     frames.find(
       (frame) =>
         !isInfrastructure(frame.file) &&
         /\.(tsx?|jsx?|mjs|cjs)$/.test(frame.file),
-    ) ??
-    frames.find((frame) => !isInfrastructure(frame.file))
+    ) ?? frames.find((frame) => !isInfrastructure(frame.file))
   )
 }
 

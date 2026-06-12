@@ -1,44 +1,22 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { eq } from 'drizzle-orm'
 
-import { db } from '#/db/index.ts'
-import {
-  authors,
-  categories,
-  postCategories,
-  posts,
-} from '#/db/schema.ts'
+import { getBlogPageData } from '#/data/blog.ts'
+import type { authors, categories } from '#/db/schema.ts'
 
-const getBlogPageData = createServerFn({ method: 'GET' }).handler(async () => {
-  const allAuthors = await db.select().from(authors)
-  const allCategories = await db.select().from(categories)
-  const allPosts = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      content: posts.content,
-      publishedAt: posts.publishedAt,
-      authorName: authors.name,
-    })
-    .from(posts)
-    .innerJoin(authors, eq(posts.authorId, authors.id))
-  const postCategoryRows = await db
-    .select({
-      postId: postCategories.postId,
-      categoryName: categories.name,
-      categorySlug: categories.slug,
-    })
-    .from(postCategories)
-    .innerJoin(categories, eq(postCategories.categoryId, categories.id))
-
-  return {
-    authors: allAuthors,
-    categories: allCategories,
-    posts: allPosts,
-    postCategories: postCategoryRows,
-  }
-})
+type Author = typeof authors.$inferSelect
+type Category = typeof categories.$inferSelect
+type PostListItem = {
+  id: number
+  title: string
+  content: string
+  publishedAt: Date | null
+  authorName: string
+}
+type PostCategoryRow = {
+  postId: number
+  categoryName: string
+  categorySlug: string
+}
 
 export const Route = createFileRoute('/blog')({
   loader: () => getBlogPageData(),
@@ -51,7 +29,7 @@ function BlogPage() {
 
   const categoriesByPost = postCategories.reduce<
     Record<number, Array<{ name: string; slug: string }>>
-  >((acc, row) => {
+  >((acc: Record<number, Array<{ name: string; slug: string }>>, row: PostCategoryRow) => {
     const list = acc[row.postId] ?? []
     list.push({ name: row.categoryName, slug: row.categorySlug })
     acc[row.postId] = list
@@ -61,14 +39,19 @@ function BlogPage() {
   return (
     <div className="p-8">
       <h1 className="text-4xl font-bold">Blog</h1>
-      <p className="mt-2 text-gray-600">
-        Authors, posts, and categories — a different set of models and queries.
+      <p className="mt-2 max-w-2xl text-gray-600">
+        Authors, posts, and categories. The server function and Drizzle queries
+        live in{' '}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">
+          src/data/blog.ts
+        </code>
+        — devtools source links point there, not this route file.
       </p>
 
       <section className="mt-8">
         <h2 className="text-2xl font-semibold">Authors ({authors.length})</h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-          {authors.map((author) => (
+          {authors.map((author: Author) => (
             <li
               key={author.id}
               className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
@@ -87,7 +70,7 @@ function BlogPage() {
           Categories ({categories.length})
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          {categories.map((category) => (
+          {categories.map((category: Category) => (
             <span
               key={category.id}
               className="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700"
@@ -101,7 +84,7 @@ function BlogPage() {
       <section className="mt-8">
         <h2 className="text-2xl font-semibold">Posts ({postList.length})</h2>
         <ul className="mt-3 flex flex-col gap-4">
-          {postList.map((post) => (
+          {postList.map((post: PostListItem) => (
             <li
               key={post.id}
               className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
@@ -115,7 +98,7 @@ function BlogPage() {
               <p className="mt-2 text-sm text-gray-700">{post.content}</p>
               {(categoriesByPost[post.id]?.length ?? 0) > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {categoriesByPost[post.id].map((cat) => (
+                  {categoriesByPost[post.id].map((cat: { name: string; slug: string }) => (
                     <span
                       key={cat.slug}
                       className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
