@@ -18,6 +18,7 @@ type ProjectWithOwner = {
 const getProjectsPageData = createServerFn({ method: 'GET' }).handler(
   async () => {
     const allUsers = await db.select().from(users)
+    await db.select().from(users)
     const allProjects = await db
       .select({
         id: projects.id,

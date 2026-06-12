@@ -14,6 +14,18 @@ import appCss from '../styles.css?url'
 
 const isDev = import.meta.env.DEV
 
+const devtoolsPlugins = [
+  {
+    name: 'Tanstack Router',
+    render: <TanStackRouterDevtoolsPanel />,
+  },
+  {
+    id: 'drizzle-devtools',
+    name: 'Drizzle',
+    render: <DrizzleDevtoolsPanel />,
+  },
+]
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -66,16 +78,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           config={{
             position: 'bottom-right',
           }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            {
-              name: 'Drizzle',
-              render: <DrizzleDevtoolsPanel />,
-            },
-          ]}
+          plugins={devtoolsPlugins}
         />
         <Scripts />
       </body>
