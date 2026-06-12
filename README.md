@@ -1,193 +1,197 @@
-Welcome to your new TanStack Start app! 
+# @tanstack/drizzle-devtools
 
-# Getting Started
+Request-scoped Drizzle query logging for TanStack Start. See every SQL statement that ran for the current page — in the TanStack Devtools panel, with timing, row counts, duplicate detection, and clickable source links.
 
-To run this application:
+Development only. Nothing is logged or shipped in production builds.
 
-```bash
-npm install
-npm run dev
-```
+## Requirements
 
-# Building For Production
+- [TanStack Start](https://tanstack.com/start)
+- [Drizzle ORM](https://orm.drizzle.team/)
+- [TanStack Devtools](https://tanstack.com/devtools) (`@tanstack/react-devtools` + `@tanstack/devtools-vite`)
 
-To build this application for production:
+SQLite instrumentation (`instrumentDatabase`) is included for `better-sqlite3`. Other drivers work with the Drizzle logger alone — you get SQL and params, but row counts and byte sizes may be missing unless you add your own instrumentation.
 
-```bash
-npm run build
-```
-
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Install
 
 ```bash
-npm run test
+npm i -D @tanstack/drizzle-devtools
 ```
 
-## Styling
+Peer dependencies you should already have in a TanStack Start + Drizzle app:
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
+```bash
+npm i @tanstack/react-start drizzle-orm
+npm i -D @tanstack/react-devtools @tanstack/devtools-vite @tanstack/devtools-event-client
 ```
 
-Then anywhere in your JSX you can use it like so:
+## Integration
 
-```tsx
-<Link to="/about">About</Link>
+### 1. Register middleware in `src/start.ts`
+
+Request middleware captures queries during SSR and injects them into the initial HTML. Function middleware sends queries to the client after each server-function call (client-side navigations).
+
+```ts
+import { createStart } from '@tanstack/react-start'
+import {
+  createQueryLogFunctionMiddleware,
+  createQueryLogMiddleware,
+} from '@tanstack/drizzle-devtools/server'
+
+const enabled = process.env.NODE_ENV === 'development'
+
+export const startInstance = createStart(() => ({
+  requestMiddleware: [createQueryLogMiddleware({ enabled })],
+  functionMiddleware: [createQueryLogFunctionMiddleware({ enabled })],
+}))
 ```
 
-This will create a link that will navigate to the `/about` route.
+### 2. Attach the Drizzle logger (and optional SQLite instrumentation)
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+In your database client, enable the logger in development. For `better-sqlite3`, also wrap the native database so queries get accurate duration, row count, and payload size.
 
-### Using A Layout
+```ts
+import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
+import {
+  createDrizzleQueryLogger,
+  instrumentDatabase,
+} from '@tanstack/drizzle-devtools/server'
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
+const sqlite = new Database(process.env.DATABASE_URL!)
 
-Here is an example layout that includes a header:
+if (process.env.NODE_ENV === 'development') {
+  instrumentDatabase(sqlite)
+}
+
+export const db = drizzle(sqlite, {
+  schema,
+  logger:
+    process.env.NODE_ENV === 'development'
+      ? createDrizzleQueryLogger()
+      : false,
+})
+```
+
+### 3. Add the TanStack Devtools plugin
+
+In your root route shell, mount the bootstrap component and register the Drizzle panel as a devtools plugin. Keep `TanStackDevtools` outside any `isDev` wrapper — `@tanstack/devtools-vite` strips conditional JSX and can break production builds.
 
 ```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { TanStackDevtools } from '@tanstack/react-devtools'
+import {
+  DrizzleDevtoolsPanel,
+  DrizzleQueryBootstrap,
+} from '@tanstack/drizzle-devtools/client'
 
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
+const isDev = import.meta.env.DEV
+
+const devtoolsPlugins = [
+  // ...your other plugins
+  {
+    id: 'drizzle-devtools',
+    name: 'Drizzle',
+    render: <DrizzleDevtoolsPanel />,
+  },
+]
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  return (
     <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
+      <head>{/* ... */}</head>
       <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
         {children}
+        {isDev && <DrizzleQueryBootstrap />}
+        <TanStackDevtools
+          config={{ position: 'bottom-right' }}
+          plugins={devtoolsPlugins}
+        />
         <Scripts />
       </body>
     </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
   )
 }
 ```
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+Define the `devtoolsPlugins` array at module scope so the plugin list is not recreated on every render.
 
-# Demo files
+### 4. Enable the Vite devtools plugin
 
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
+Required for “open in editor” links on query source locations.
 
-# Learn More
+```ts
+import { defineConfig } from 'vite'
+import { devtools } from '@tanstack/devtools-vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+export default defineConfig({
+  plugins: [
+    devtools({
+      // Recommended: avoids server↔client console piping feedback loops.
+      consolePiping: { enabled: false },
+    }),
+    tanstackStart(),
+    // ...
+  ],
+})
+```
 
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+## Usage
+
+1. Run your app in development (`npm run dev`).
+2. Open TanStack Devtools (bottom-right by default).
+3. Select the **Drizzle** tab.
+
+The panel shows queries for the **current page view**:
+
+- **Full page load** — queries are injected into the HTML and picked up on hydration.
+- **Client-side navigation** — queries from the route loader’s server function are pushed automatically.
+
+Navigate between routes and the log updates to reflect only what ran for that navigation.
+
+### Panel features
+
+- Syntax-highlighted SQL with bound parameters
+- Summary: total statements, duplicates, unique count
+- Sort by order, duration, or SQL text
+- Filter to duplicated queries only
+- Per-query: read/write badge, row count, payload size, duration, source file link
+- Copy SQL to clipboard
+
+## How it works
+
+Queries are collected in an `AsyncLocalStorage` store for the lifetime of each server request or server-function call. The Drizzle `logger` hook records SQL; optional SQLite instrumentation enriches entries with timing and row metadata.
+
+| Path | Mechanism |
+| --- | --- |
+| SSR / document request | `createQueryLogMiddleware` injects `window.__DB_QUERIES__` into the HTML; `DrizzleQueryBootstrap` reads it on the client |
+| Client navigation | `createQueryLogFunctionMiddleware` returns the query log via `sendContext`; the client publishes it to the devtools event bus |
+
+The panel subscribes to `queries-update` events and replaces the list on each page transition — there is no global query history across navigations.
+
+## API
+
+### Server (`@tanstack/drizzle-devtools/server`)
+
+| Export | Description |
+| --- | --- |
+| `createQueryLogMiddleware()` | Request middleware — ALS scope + HTML injection |
+| `createQueryLogFunctionMiddleware()` | Server-function middleware — pushes queries on client navigations |
+| `createDrizzleQueryLogger()` | Drizzle `Logger` implementation |
+| `instrumentDatabase(db)` | Wraps `better-sqlite3` `Database` for timing / row count / size |
+
+Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV === 'development'`).
+
+### Client (`@tanstack/drizzle-devtools/client`)
+
+| Export | Description |
+| --- | --- |
+| `DrizzleDevtoolsPanel` | TanStack Devtools plugin panel |
+| `DrizzleQueryBootstrap` | Reads initial SSR query payload; mount once in your root shell |
+
+## Limitations
+
+- **Development only** — disable via `enabled: false` or `NODE_ENV` checks.
+- **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
+- **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
+- **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.

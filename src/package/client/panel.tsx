@@ -12,6 +12,7 @@ import {
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -21,7 +22,11 @@ import { drizzleDevtoolsClient } from './event-client.ts'
 import { formatBytes, formatDuration } from './format.ts'
 import { HighlightedSql } from './highlight-sql.tsx'
 import { openInEditor } from './open-in-editor.ts'
-import { getCachedQueries, readQueriesFromWindow } from './query-cache.ts'
+import {
+  getCachedQueries,
+  readQueriesFromWindow,
+  setCachedQueries,
+} from './query-cache.ts'
 import {
   buildQueryList,
   filterQueries,
@@ -58,7 +63,11 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
   const [sort, setSort] = useState<QuerySortOption>('order')
   const [showOnlyDuplicates, setShowOnlyDuplicates] = useState(false)
   const [showOnlyNPlusOne, setShowOnlyNPlusOne] = useState(false)
+  const [preserve, setPreserve] = useState(true)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const preserveRef = useRef(preserve)
+
+  preserveRef.current = preserve
 
   useEffect(() => {
     const cached = loadInitialQueries()
@@ -67,7 +76,16 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
     }
 
     const cleanup = drizzleDevtoolsClient.on('queries-update', (event) => {
-      setQueries(event.payload.queries)
+      const { queries: incoming, replace } = event.payload
+      const shouldReplace = replace || !preserveRef.current
+
+      setQueries((previous) => {
+        const next = shouldReplace
+          ? incoming
+          : [...previous, ...incoming]
+        setCachedQueries(next)
+        return next
+      })
       setShowOnlyDuplicates(false)
     })
 
@@ -239,6 +257,22 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
               <Clock size={12} />
               {formatDuration(stats.totalDurationMs)}
             </span>
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                color: colors.textMuted,
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={preserve}
+                onChange={(event) => setPreserve(event.target.checked)}
+              />
+              Preserve
+            </label>
             <label
               style={{
                 display: 'inline-flex',

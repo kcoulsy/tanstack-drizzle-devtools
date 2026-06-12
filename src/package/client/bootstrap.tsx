@@ -6,7 +6,7 @@ import { readQueriesFromWindow } from './query-cache.ts'
 export function DrizzleQueryBootstrap() {
   useEffect(() => {
     const queries = readQueriesFromWindow()
-    publishQueriesToClient(queries)
+    publishQueriesToClient(queries, { replace: true })
     delete window.__DB_QUERIES__
   }, [])
 
