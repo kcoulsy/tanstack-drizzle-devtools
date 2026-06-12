@@ -5,7 +5,7 @@ import {
   estimateQuerySize,
   getQueryKind,
 } from './query-meta.ts'
-import type { QueryLogEntry, QuerySource } from '../types.ts'
+import type { QueryLogEntry, QuerySource } from '../../types.ts'
 
 type QueryLogStore = {
   entries: QueryLogEntry[]

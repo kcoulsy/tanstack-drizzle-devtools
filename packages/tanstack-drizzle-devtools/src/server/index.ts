@@ -1,8 +1,11 @@
-export { createDrizzleQueryLogger } from './drizzle-logger.ts'
+export { createDrizzleQueryLogger } from './logging/drizzle-logger.ts'
 export {
   createQueryLogFunctionMiddleware,
   QUERY_LOG_SEND_CONTEXT_KEY,
-} from './function-middleware.ts'
-export { instrumentDrizzleDb } from './instrument-drizzle.ts'
-export { instrumentDatabase } from './instrument-sqlite.ts'
-export { createQueryLogMiddleware } from './middleware.ts'
+} from './middleware/function.ts'
+export {
+  instrumentDatabase,
+  instrumentDrizzleDb,
+  instrumentSqlite,
+} from './instrument/index.ts'
+export { createQueryLogMiddleware } from './middleware/request.ts'

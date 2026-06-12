@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
-import { publishQueriesToClient } from './publish-queries.ts'
-import { readQueriesFromWindow } from './query-cache.ts'
+import { publishQueriesToClient } from '../lib/publish-queries.ts'
+import { readQueriesFromWindow } from '../lib/query-cache.ts'
 
 export function DrizzleQueryBootstrap() {
   useEffect(() => {

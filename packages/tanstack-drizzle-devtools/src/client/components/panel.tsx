@@ -18,27 +18,27 @@ import {
   type ReactNode,
 } from 'react'
 
-import { drizzleDevtoolsClient } from './event-client.ts'
-import { formatBytes, formatDuration } from './format.ts'
-import { HighlightedSql } from './highlight-sql.tsx'
-import { openInEditor } from './open-in-editor.ts'
+import { drizzleDevtoolsClient } from '../lib/event-client.ts'
+import { formatBytes, formatDuration } from '../lib/format.ts'
+import { openInEditor } from '../lib/open-in-editor.ts'
 import {
   getCachedQueries,
   readQueriesFromWindow,
   setCachedQueries,
-} from './query-cache.ts'
+} from '../lib/query-cache.ts'
 import {
   buildQueryList,
   filterQueries,
   getQueryStats,
   sortQueries,
-} from './query-utils.ts'
+} from '../lib/query-utils.ts'
 import {
   getPanelTheme,
   useTanStackDevtoolsTheme,
   type PanelTheme,
-} from './theme.ts'
-import type { QueryLogEntry, QuerySortOption } from '../types.ts'
+} from '../lib/theme.ts'
+import type { QueryLogEntry, QuerySortOption } from '../../types.ts'
+import { HighlightedSql } from './highlight-sql.tsx'
 
 const SORT_OPTIONS: Array<{ value: QuerySortOption; label: string }> = [
   { value: 'order', label: 'Order' },

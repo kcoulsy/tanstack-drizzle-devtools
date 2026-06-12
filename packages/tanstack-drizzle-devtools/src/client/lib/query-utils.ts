@@ -1,8 +1,8 @@
 import {
   getQueryFingerprint,
   getSqlShapeFingerprint,
-} from '../query-fingerprint.ts'
-import type { QueryLogEntry, QuerySortOption } from '../types.ts'
+} from '../../query-fingerprint.ts'
+import type { QueryLogEntry, QuerySortOption } from '../../types.ts'
 
 export type QueryListItem = QueryLogEntry & {
   index: number

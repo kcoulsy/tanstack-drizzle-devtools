@@ -1,17 +1,21 @@
-import type { QueryKind, QuerySource } from '../types.ts'
+import type { QueryKind, QuerySource } from '../../types.ts'
 
 const INFRASTRUCTURE_PATTERNS = [
   'drizzle-orm',
   'sqlite-core',
+  'pg-core',
+  'mysql-core',
   'query-builders',
   'query-promise',
   'better-sqlite3',
-  'package/server',
+  'server/logging',
+  'server/instrument',
+  'server/middleware',
   'query-log',
   'query-meta',
   'drizzle-logger',
-  'instrument-sqlite',
-  'instrument-drizzle',
+  'instrument/sqlite',
+  'instrument/drizzle',
   'node:internal',
   'node:async_hooks',
   '@tanstack/react-start',

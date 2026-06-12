@@ -1,4 +1,4 @@
-import type { QuerySource } from '../types.ts'
+import type { QuerySource } from '../../types.ts'
 
 /**
  * Opens a file in the local editor via TanStack Devtools Vite middleware.

@@ -1,6 +1,6 @@
 import { EventClient } from '@tanstack/devtools-event-client'
 
-import type { QueryLogEntry } from '../types.ts'
+import type { QueryLogEntry } from '../../types.ts'
 
 type DrizzleDevtoolsEvents = {
   'queries-update': { queries: QueryLogEntry[]; replace?: boolean }

@@ -1,7 +1,7 @@
 import { createMiddleware } from '@tanstack/react-start'
 
-import { getQueryLog } from './query-log.ts'
-import type { QueryLogEntry } from '../types.ts'
+import { getQueryLog } from '../logging/query-log.ts'
+import type { QueryLogEntry } from '../../types.ts'
 
 export const QUERY_LOG_SEND_CONTEXT_KEY = 'drizzleDevtoolsQueries'
 
@@ -22,7 +22,7 @@ export function createQueryLogFunctionMiddleware(options?: { enabled?: boolean }
 
       if (queries) {
         const { publishQueriesToClient } = await import(
-          '../client/publish-queries.ts'
+          '../../client/lib/publish-queries.ts'
         )
         publishQueriesToClient(queries)
       }

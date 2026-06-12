@@ -3,9 +3,9 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { describe, expect, it } from 'vitest'
 
-import { createDrizzleQueryLogger } from './drizzle-logger.ts'
-import { instrumentDrizzleDb } from './instrument-drizzle.ts'
-import { getQueryLog, runWithQueryLog } from './query-log.ts'
+import { createDrizzleQueryLogger } from '../logging/drizzle-logger.ts'
+import { getQueryLog, runWithQueryLog } from '../logging/query-log.ts'
+import { instrumentDrizzleDb } from './drizzle.ts'
 
 const users = sqliteTable('users', {
   id: integer('id').primaryKey(),

@@ -1,4 +1,4 @@
-import type { QueryLogEntry } from '../types.ts'
+import type { QueryLogEntry } from '../../types.ts'
 
 let cachedQueries: QueryLogEntry[] = []
 

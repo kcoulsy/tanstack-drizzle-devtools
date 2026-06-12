@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3'
 
-import { completeQuery } from './query-log.ts'
+import { completeQuery } from '../logging/query-log.ts'
+import { estimateResultSize } from './shared.ts'
 
 type SqliteStatement = ReturnType<Database.Database['prepare']>
 
@@ -14,6 +15,9 @@ export function instrumentDatabase(database: Database.Database) {
 
   return database
 }
+
+/** Alias for {@link instrumentDatabase}. */
+export const instrumentSqlite = instrumentDatabase
 
 function wrapStatement(statement: SqliteStatement, sql: string) {
   wrapMethod(statement, 'run', (result) => ({
@@ -57,10 +61,3 @@ function wrapMethod<T>(
   }) as typeof statement[typeof method]
 }
 
-function estimateResultSize(value: unknown) {
-  try {
-    return new TextEncoder().encode(JSON.stringify(value)).byteLength
-  } catch {
-    return 0
-  }
-}

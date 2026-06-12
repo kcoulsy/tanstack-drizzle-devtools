@@ -1,7 +1,7 @@
 import { createMiddleware } from '@tanstack/react-start'
 
 import { injectQueryScript } from './inject.ts'
-import { getQueryLog, runWithQueryLog } from './query-log.ts'
+import { getQueryLog, runWithQueryLog } from '../logging/query-log.ts'
 
 export function createQueryLogMiddleware(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? process.env.NODE_ENV === 'development'

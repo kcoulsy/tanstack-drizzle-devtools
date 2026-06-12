@@ -1,4 +1,4 @@
-# @tanstack/drizzle-devtools
+# tanstack-drizzle-devtools
 
 Request-scoped Drizzle query logging for TanStack Start. See every SQL statement that ran for the current page — in the TanStack Devtools panel, with timing, row counts, duplicate detection, and clickable source links.
 
@@ -36,7 +36,7 @@ import { createStart } from '@tanstack/react-start'
 import {
   createQueryLogFunctionMiddleware,
   createQueryLogMiddleware,
-} from '@tanstack/drizzle-devtools/server'
+} from 'tanstack-drizzle-devtools/server'
 
 const enabled = process.env.NODE_ENV === 'development'
 
@@ -56,7 +56,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import {
   createDrizzleQueryLogger,
   instrumentDatabase,
-} from '@tanstack/drizzle-devtools/server'
+} from 'tanstack-drizzle-devtools/server'
 
 const sqlite = new Database(process.env.DATABASE_URL!)
 
@@ -82,7 +82,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   DrizzleDevtoolsPanel,
   DrizzleQueryBootstrap,
-} from '@tanstack/drizzle-devtools/client'
+} from 'tanstack-drizzle-devtools/client'
 
 const isDev = import.meta.env.DEV
 
@@ -173,7 +173,7 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 
 ## API
 
-### Server (`@tanstack/drizzle-devtools/server`)
+### Server (`tanstack-drizzle-devtools/server`)
 
 
 | Export                               | Description                                                       |
@@ -186,7 +186,7 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 
 Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV === 'development'`).
 
-### Client (`@tanstack/drizzle-devtools/client`)
+### Client (`tanstack-drizzle-devtools/client`)
 
 
 | Export                  | Description                                                    |

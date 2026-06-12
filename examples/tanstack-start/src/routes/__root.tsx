@@ -10,7 +10,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   DrizzleDevtoolsPanel,
   DrizzleQueryBootstrap,
-} from '@tanstack/drizzle-devtools/client'
+} from 'tanstack-drizzle-devtools/client'
 
 import appCss from '../styles.css?url'
 

@@ -5,7 +5,7 @@ import {
   createDrizzleQueryLogger,
   instrumentDatabase,
   instrumentDrizzleDb,
-} from '@tanstack/drizzle-devtools/server'
+} from 'tanstack-drizzle-devtools/server'
 
 import * as schema from './schema.ts'
 

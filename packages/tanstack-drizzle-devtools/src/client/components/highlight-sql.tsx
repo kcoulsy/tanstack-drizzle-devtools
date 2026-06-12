@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 
-import type { PanelTheme } from './theme.ts'
-import { getPanelTheme } from './theme.ts'
+import type { PanelTheme } from '../lib/theme.ts'
+import { getPanelTheme } from '../lib/theme.ts'
 
 const KEYWORDS = new Set([
   'select',

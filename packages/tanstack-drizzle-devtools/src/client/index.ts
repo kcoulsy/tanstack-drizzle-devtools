@@ -1,2 +1,2 @@
-export { DrizzleQueryBootstrap } from './bootstrap.tsx'
-export { DrizzleDevtoolsPanel } from './panel.tsx'
+export { DrizzleQueryBootstrap } from './components/bootstrap.tsx'
+export { DrizzleDevtoolsPanel } from './components/panel.tsx'

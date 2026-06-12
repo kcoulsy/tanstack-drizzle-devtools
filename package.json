@@ -2,7 +2,7 @@
   "name": "tanstack-drizzle-devtools-monorepo",
   "private": true,
   "scripts": {
-    "test": "pnpm --filter @tanstack/drizzle-devtools test"
+    "test": "pnpm --filter tanstack-drizzle-devtools test"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

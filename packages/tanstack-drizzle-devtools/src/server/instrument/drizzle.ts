@@ -1,5 +1,5 @@
-import { captureSource } from './query-meta.ts'
-import { pushPendingSource } from './query-log.ts'
+import { captureSource } from '../logging/query-meta.ts'
+import { pushPendingSource } from '../logging/query-log.ts'
 
 const QUERY_START_METHODS = new Set([
   'select',

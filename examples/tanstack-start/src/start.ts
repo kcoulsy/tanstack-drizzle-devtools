@@ -3,7 +3,7 @@ import { createStart } from '@tanstack/react-start'
 import {
   createQueryLogFunctionMiddleware,
   createQueryLogMiddleware,
-} from '@tanstack/drizzle-devtools/server'
+} from 'tanstack-drizzle-devtools/server'
 
 const devtoolsEnabled = process.env.NODE_ENV === 'development'
 
