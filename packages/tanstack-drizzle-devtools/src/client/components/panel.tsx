@@ -20,6 +20,7 @@ import {
 
 import { drizzleDevtoolsClient } from '../lib/event-client.ts'
 import { formatBytes, formatDuration } from '../lib/format.ts'
+import { formatQuerySummary } from '../lib/format-summary.ts'
 import { openInEditor } from '../lib/open-in-editor.ts'
 import {
   getCachedQueries,
@@ -65,6 +66,7 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
   const [showOnlyNPlusOne, setShowOnlyNPlusOne] = useState(false)
   const [preserve, setPreserve] = useState(true)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [copiedSummary, setCopiedSummary] = useState(false)
   const preserveRef = useRef(preserve)
 
   preserveRef.current = preserve
@@ -112,6 +114,12 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
     await navigator.clipboard.writeText(text)
     setCopiedIndex(index)
     window.setTimeout(() => setCopiedIndex(null), 1200)
+  }
+
+  const copySummary = async () => {
+    await navigator.clipboard.writeText(formatQuerySummary(items, stats))
+    setCopiedSummary(true)
+    window.setTimeout(() => setCopiedSummary(false), 1200)
   }
 
   if (queries.length === 0) {
@@ -273,6 +281,25 @@ export function DrizzleDevtoolsPanel({ theme: themeProp }: { theme?: PanelTheme 
               />
               Preserve
             </label>
+            <button
+              type="button"
+              onClick={copySummary}
+              title="Copy summary for LLM"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 24,
+                height: 24,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                background: colors.bgMuted,
+                color: colors.textMuted,
+                cursor: 'pointer',
+              }}
+            >
+              {copiedSummary ? <Check size={12} /> : <Copy size={12} />}
+            </button>
             <label
               style={{
                 display: 'inline-flex',

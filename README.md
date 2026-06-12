@@ -165,6 +165,7 @@ Navigate between routes and the log resets to reflect only what ran for the new 
 - Filter to duplicated queries only
 - Per-query: read/write badge, row count, payload size, duration, source file link
 - Copy SQL to clipboard
+- Copy full query summary to clipboard (for LLM optimization review)
 
 ## How it works
 
