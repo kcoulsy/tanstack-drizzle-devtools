@@ -7,8 +7,10 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import { DrizzleQueryBootstrap } from '#/package/client/bootstrap.tsx'
-import { DrizzleDevtoolsPanel } from '#/package/client/panel.tsx'
+import {
+  DrizzleDevtoolsPanel,
+  DrizzleQueryBootstrap,
+} from '@tanstack/drizzle-devtools/client'
 
 import appCss from '../styles.css?url'
 

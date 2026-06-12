@@ -1,9 +1,11 @@
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 
-import { createDrizzleQueryLogger } from '#/package/server/drizzle-logger.ts'
-import { instrumentDrizzleDb } from '#/package/server/instrument-drizzle.ts'
-import { instrumentDatabase } from '#/package/server/instrument-sqlite.ts'
+import {
+  createDrizzleQueryLogger,
+  instrumentDatabase,
+  instrumentDrizzleDb,
+} from '@tanstack/drizzle-devtools/server'
 
 import * as schema from './schema.ts'
 

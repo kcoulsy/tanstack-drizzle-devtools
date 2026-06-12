@@ -1,7 +1,9 @@
 import { createStart } from '@tanstack/react-start'
 
-import { createQueryLogFunctionMiddleware } from '#/package/server/function-middleware.ts'
-import { createQueryLogMiddleware } from '#/package/server/middleware.ts'
+import {
+  createQueryLogFunctionMiddleware,
+  createQueryLogMiddleware,
+} from '@tanstack/drizzle-devtools/server'
 
 const devtoolsEnabled = process.env.NODE_ENV === 'development'
 

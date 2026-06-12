@@ -15,7 +15,7 @@ SQLite instrumentation (`instrumentDatabase`) is included for `better-sqlite3`. 
 ## Install
 
 ```bash
-npm i -D tanstack-drizzle-devtools
+npm i -D @tanstack/drizzle-devtools
 ```
 
 Peer dependencies you should already have in a TanStack Start + Drizzle app:
@@ -162,12 +162,10 @@ Navigate between routes and the log updates to reflect only what ran for that na
 
 Queries are collected in an `AsyncLocalStorage` store for the lifetime of each server request or server-function call. The Drizzle `logger` hook records SQL; optional SQLite instrumentation enriches entries with timing and row metadata.
 
-
-| Path                   | Mechanism                                                                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| SSR / document request | `createQueryLogMiddleware` injects `window.__DB_QUERIES__` into the HTML; `DrizzleQueryBootstrap` reads it on the client      |
-| Client navigation      | `createQueryLogFunctionMiddleware` returns the query log via `sendContext`; the client publishes it to the devtools event bus |
-
+| Path | Mechanism |
+| --- | --- |
+| SSR / document request | `createQueryLogMiddleware` injects `window.__DB_QUERIES__` into the HTML; `DrizzleQueryBootstrap` reads it on the client |
+| Client navigation | `createQueryLogFunctionMiddleware` returns the query log via `sendContext`; the client publishes it to the devtools event bus |
 
 The panel subscribes to `queries-update` events and replaces the list on each page transition — there is no global query history across navigations.
 
@@ -175,25 +173,21 @@ The panel subscribes to `queries-update` events and replaces the list on each pa
 
 ### Server (`@tanstack/drizzle-devtools/server`)
 
-
-| Export                               | Description                                                       |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| `createQueryLogMiddleware()`         | Request middleware — ALS scope + HTML injection                   |
+| Export | Description |
+| --- | --- |
+| `createQueryLogMiddleware()` | Request middleware — ALS scope + HTML injection |
 | `createQueryLogFunctionMiddleware()` | Server-function middleware — pushes queries on client navigations |
-| `createDrizzleQueryLogger()`         | Drizzle `Logger` implementation                                   |
-| `instrumentDatabase(db)`             | Wraps `better-sqlite3` `Database` for timing / row count / size   |
-
+| `createDrizzleQueryLogger()` | Drizzle `Logger` implementation |
+| `instrumentDatabase(db)` | Wraps `better-sqlite3` `Database` for timing / row count / size |
 
 Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV === 'development'`).
 
 ### Client (`@tanstack/drizzle-devtools/client`)
 
-
-| Export                  | Description                                                    |
-| ----------------------- | -------------------------------------------------------------- |
-| `DrizzleDevtoolsPanel`  | TanStack Devtools plugin panel                                 |
+| Export | Description |
+| --- | --- |
+| `DrizzleDevtoolsPanel` | TanStack Devtools plugin panel |
 | `DrizzleQueryBootstrap` | Reads initial SSR query payload; mount once in your root shell |
-
 
 ## Limitations
 
@@ -201,4 +195,3 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 - **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
 - **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.
-
