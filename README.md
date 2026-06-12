@@ -1,5 +1,7 @@
 # tanstack-drizzle-devtools
 
+![Drizzle query log in TanStack Devtools, with N+1 and duplicate queries highlighted](docs/assets/drizzle-devtools-panel.png)
+
 Request-scoped Drizzle query logging for TanStack Start. See every SQL statement that ran for the current page — in the TanStack Devtools panel, with timing, row counts, duplicate detection, and clickable source links.
 
 Development only. Nothing is logged or shipped in production builds.
@@ -201,6 +203,14 @@ Both middleware factories accept `{ enabled?: boolean }` (defaults to `NODE_ENV 
 - **Per-navigation scope** — the log resets when you navigate; it does not accumulate across the session.
 - **Source locations** — stack traces often point at Drizzle internals (`query-promise.ts`) because server functions are bundled; route files are preferred when present in the stack.
 - **SQLite-first instrumentation** — `instrumentDatabase` targets `better-sqlite3`; other drivers need custom wrappers if you want row counts and sizes.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, workflow, and pull request guidelines.
+
+## License
+
+[MIT](LICENSE)
 
 ## Acknowledgments
 
